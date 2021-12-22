@@ -1,15 +1,15 @@
-import subprocess, json, argparse
- 
-parser=argparse.ArgumentParser()
+import subprocess, json
 
-parser.add_argument('-b', '--bucket', help='s3 bucket to restore from', required=True)
-parser.add_argument('-i', '--input', help='input file', required=True)
+file = open('input.json')
+data = json.load(file)
 
-args=parser.parse_args()
+dryRun = data["dryRun"]
+bucket = data["bucket"]
+items = data["items"]
 
-f = open(args.input)
-data = json.load(f)
+for item in items:
+    if dryRun:
+        subprocess.call(f' python s3-pit-restore -b {bucket} -B {bucket} -p {item["prefix"]} -t "{item["timestamp"]}" -v --dry-run', shell=True)
+    else:
+        subprocess.call(f' python s3-pit-restore -b {bucket} -B {bucket} -p {item["prefix"]} -t "{item["timestamp"]}" -v', shell=True)
 
-for d in data:
-    print(d['prefix'])
-    subprocess.call(f' python s3-pit-restore -b {args.bucket} -B {args.bucket} -p {d["prefix"]} -t "{d["timestamp"]}"', shell=True)
