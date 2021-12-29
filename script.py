@@ -55,7 +55,7 @@ if input is True:
             optioncmd = f'{optioncmd} --skip-deletion'
         if dryRun:
             optioncmd = f'{optioncmd} -v --dry-run'
-            
+
         subprocess.call(optioncmd, shell=True)
 else:
     print("user denied, Exiting")
