@@ -313,9 +313,9 @@ def handled_by_delete(obj):
     if args.dry_run:
         print_obj(obj)
         return True
-    future = executor.submit(s3_delete_object, obj)
-    global futures
-    futures[future] = obj
+    # future = executor.submit(s3_delete_object, obj)
+    # global futures
+    # futures[future] = obj
     return True
 
 def s3_delete_object(obj):
