@@ -45,10 +45,15 @@ client = None
 # setup logging
 timeStamp = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
 logfile = "logs/" + timeStamp + ".log"
-logging.basicConfig(filename=logfile, filemode='w', level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
-# print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-# logging.basicConfig(filename='example.log', filemode='w', level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s',
+    handlers=[
+        logging.FileHandler(logfile),
+        logging.StreamHandler()
+    ]
+)
 
 class TestS3PitRestore(unittest.TestCase):
 
@@ -196,19 +201,18 @@ def signal_handler(signal, frame):
     print("Gracefully exiting ...")
 
 def print_obj(obj, optional_message=""):
-    currentVersion = ""
+    latestVersion = ""
     restoreVersion = ""
 
     if "restoreType" in obj:
         if obj["restoreType"] == "copy_object": 
-            currentVersion = obj["currentVersion"]
+            latestVersion = obj["latestVersion"]
             restoreVersion = obj["VersionId"]
         elif obj["restoreType"] == "delete_object": 
-            currentVersion = obj["VersionId"]
+            latestVersion = obj["VersionId"]
 
     if args.verbose:
-        print('"%s" "%s" "%s" "%s" "%s" %s' % (obj["Key"], currentVersion, restoreVersion, obj["LastModified"], obj["restoreType"], optional_message))
-        logging.info('"%s" "%s" "%s" "%s" "%s" %s' % (obj["Key"], currentVersion, restoreVersion, obj["LastModified"], obj["restoreType"], optional_message))
+        logging.info('"%s" "%s" "%s" "%s" "%s" %s' % (obj["Key"], latestVersion, restoreVersion, obj["LastModified"], obj["restoreType"], optional_message))
     else:
         print(obj["Key"])
 
@@ -281,7 +285,7 @@ def needs_copy(obj):
     if args.bucket != args.dest_bucket:
         return obj["ETag"] != destination_object_data["ETag"]
     else:
-        obj["currentVersion"] = destination_object_data["VersionId"]
+        obj["latestVersion"] = destination_object_data["VersionId"]
         return obj["VersionId"] != destination_object_data["VersionId"]
 
 def download_file(obj):

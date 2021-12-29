@@ -39,8 +39,6 @@ print(outputStr.format(**locals()))
 
 input = ask_yesno("Continue ? (y/n)")
 
-subprocess.run(["ls", "-l", "/dev/null"], capture_output=True)
-
 if input is True: 
     print("user consent. Starting")
     
@@ -49,8 +47,8 @@ if input is True:
         print("------------------------------------------------")
         print("Processing {} of {} , path = {} ".format(index, len(items), item))
         if dryRun:
-            subprocess.run(f' python s3-pit-restore -b {bucket} -B {bucket} -p {item} -t "{timestamp}" -v --dry-run', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.call(f' python s3-pit-restore -b {bucket} -B {bucket} -p {item} -t "{timestamp}" -v --dry-run', shell=True)
         else:
-            subprocess.run(f' python s3-pit-restore -b {bucket} -B {bucket} -p {item} -t "{timestamp}" -v', shell=True)
+            subprocess.call(f' python s3-pit-restore -b {bucket} -B {bucket} -p {item} -t "{timestamp}" -v', shell=True)
 else:
     print("user denied, Exiting")
