@@ -39,7 +39,7 @@ $ pip3 install s3-pit-restore
 
 - Run the script:
 ```bash
-$ python script.js
+$ python script.py
 ```
 - - -
 

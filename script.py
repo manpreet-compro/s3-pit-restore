@@ -47,8 +47,8 @@ if input is True:
         print("------------------------------------------------")
         print("Processing {} of {} , path = {} ".format(index, len(items), item))
         if dryRun:
-            subprocess.call(f' python s3-pit-restore -b {bucket} -B {bucket} -p {item} -t "{timestamp}" -v --dry-run', shell=True)
+            subprocess.call(f' python s3-pit-restore -b {bucket} -B {bucket} -p {item} -t "{timestamp}" -v --dry-run --avoid-duplicates', shell=True)
         else:
-            subprocess.call(f' python s3-pit-restore -b {bucket} -B {bucket} -p {item} -t "{timestamp}" -v', shell=True)
+            subprocess.call(f' python s3-pit-restore -b {bucket} -B {bucket} -p {item} -t "{timestamp}" -v --avoid-duplicates', shell=True)
 else:
     print("user denied, Exiting")
