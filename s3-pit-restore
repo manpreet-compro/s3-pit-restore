@@ -30,16 +30,25 @@
 # SOFTWARE.
 
 import os, sys, time, signal, argparse, boto3, botocore, \
-        unittest, concurrent.futures, shutil, uuid, time
+        unittest, concurrent.futures, shutil, uuid, time, logging
 from datetime import datetime, timezone
 from dateutil.parser import parse
 from s3transfer.manager import TransferConfig
+from botocore.exceptions import ClientError
 
 args = None
 executor = None
 transfer = None
 futures = {}
 client = None
+
+# setup logging
+timeStamp = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+logfile = "logs/" + timeStamp + ".log"
+logging.basicConfig(filename=logfile, filemode='w', level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+
+# print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+# logging.basicConfig(filename='example.log', filemode='w', level=logging.DEBUG)
 
 class TestS3PitRestore(unittest.TestCase):
 
@@ -187,8 +196,19 @@ def signal_handler(signal, frame):
     print("Gracefully exiting ...")
 
 def print_obj(obj, optional_message=""):
+    currentVersion = ""
+    restoreVersion = ""
+
+    if "restoreType" in obj:
+        if obj["restoreType"] == "copy_object": 
+            currentVersion = obj["currentVersion"]
+            restoreVersion = obj["VersionId"]
+        elif obj["restoreType"] == "delete_object": 
+            currentVersion = obj["VersionId"]
+
     if args.verbose:
-        print('"%s" %s %s %s %s %s' % (obj["LastModified"], obj["VersionId"], obj["Size"], obj["StorageClass"], obj["Key"], optional_message))
+        print('"%s" "%s" "%s" "%s" "%s" %s' % (obj["Key"], currentVersion, restoreVersion, obj["LastModified"], obj["restoreType"], optional_message))
+        logging.info('"%s" "%s" "%s" "%s" "%s" %s' % (obj["Key"], currentVersion, restoreVersion, obj["LastModified"], obj["restoreType"], optional_message))
     else:
         print(obj["Key"])
 
@@ -238,6 +258,9 @@ def handled_by_standard(obj):
     return True
 
 def handled_by_copy(obj):
+    obj["restoreType"] = "copy_object"
+    if args.avoid_duplicates and not needs_copy(obj):
+        return True
     if args.dry_run:
         print_obj(obj)
         return True
@@ -245,6 +268,21 @@ def handled_by_copy(obj):
     global futures
     futures[future] = obj
     return True
+
+def needs_copy(obj):
+    try:
+        destination_object_data = client.head_object(Bucket=args.dest_bucket, Key=obj["Key"])
+    except ClientError as error:
+        if error.response['ResponseMetadata']['HTTPStatusCode'] == 404:
+            return True
+        else:
+            raise error
+    # Won't work for files uploaded with different multipart chunk sizes
+    if args.bucket != args.dest_bucket:
+        return obj["ETag"] != destination_object_data["ETag"]
+    else:
+        obj["currentVersion"] = destination_object_data["VersionId"]
+        return obj["VersionId"] != destination_object_data["VersionId"]
 
 def download_file(obj):
     transfer.download_file(args.bucket, obj["Key"], obj["Key"], extra_args={"VersionId": obj["VersionId"]})
@@ -271,6 +309,7 @@ def s3_copy_object(obj):
     client.copy(Bucket=args.dest_bucket, CopySource=copy_source, Key=get_key(obj), ExtraArgs=extra_args)
 
 def handled_by_delete(obj):
+    obj["restoreType"] = "delete_object"
     if args.dry_run:
         print_obj(obj)
         return True
@@ -404,6 +443,7 @@ if __name__=='__main__':
     parser.add_argument('--debug', help='enable debug output', action='store_true')
     parser.add_argument('--test', help='s3 pit restore testing', action='store_true')
     parser.add_argument('--max-workers', help='max number of concurrent download requests', default=10, type=int)
+    parser.add_argument('--avoid-duplicates', help='avoids copying files if the latest version is the version that matches timestamp requested', action='store_true')
     parser.add_argument('--sse', choices=['AES256', 'aws:kms'], help='Specify server-side encryption')
     args = parser.parse_args()
 
