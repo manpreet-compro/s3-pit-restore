@@ -205,10 +205,10 @@ def print_obj(obj, optional_message=""):
     restoreVersion = ""
 
     if "changeType" in obj:
-        if obj["changeType"] == "copy_object": 
+        if obj["changeType"] == "modified": 
             latestVersion = obj["latestVersion"]
             restoreVersion = obj["VersionId"]
-        elif obj["changeType"] == "delete_object": 
+        elif obj["changeType"] == "created": 
             latestVersion = obj["VersionId"]
 
     if args.verbose:

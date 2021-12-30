@@ -41,14 +41,18 @@ input = ask_yesno("Continue ? (y/n)")
 
 if input is True: 
     print("user consent. Starting")
-    
-    # Process the records
+    scriptcmd = f'python s3-pit-restore -b {bucket} -B {bucket} -t "{timestamp}" --avoid-duplicates'
+
+    #Process the records
     for index, item in enumerate(items, start=1):
+        itemcmd = f'{scriptcmd} -p {item}'
+        optioncmd = ''
         print("------------------------------------------------")
-        print("Processing {} of {} , path = {} ".format(index, len(items), item))
+        print(f"Processing {index} of {len(items)} , path = {item}")
         if dryRun:
-            subprocess.call(f' python s3-pit-restore -b {bucket} -B {bucket} -p {item} -t "{timestamp}" -v --dry-run --avoid-duplicates', shell=True)
+            optioncmd = f'{itemcmd} -v --dry-run'
         else:
-            subprocess.call(f' python s3-pit-restore -b {bucket} -B {bucket} -p {item} -t "{timestamp}" --avoid-duplicates', shell=True)
+            optioncmd = itemcmd
+        subprocess.call(optioncmd, shell=True)
 else:
     print("user denied, Exiting")
