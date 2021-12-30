@@ -42,7 +42,7 @@ input = ask_yesno("Continue ? (y/n)")
 if input is True: 
     print("user consent. Starting")
     scriptcmd = f'python s3-pit-restore -b {bucket} -B {bucket} -t "{timestamp}" --avoid-duplicates'
-
+    
     #Process the records
     for index, item in enumerate(items, start=1):
         itemcmd = f'{scriptcmd} -p {item}'
