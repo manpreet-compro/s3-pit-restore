@@ -204,15 +204,15 @@ def print_obj(obj, optional_message=""):
     latestVersion = ""
     restoreVersion = ""
 
-    if "restoreType" in obj:
-        if obj["restoreType"] == "copy_object": 
+    if "changeType" in obj:
+        if obj["changeType"] == "copy_object": 
             latestVersion = obj["latestVersion"]
             restoreVersion = obj["VersionId"]
-        elif obj["restoreType"] == "delete_object": 
+        elif obj["changeType"] == "delete_object": 
             latestVersion = obj["VersionId"]
 
     if args.verbose:
-        logging.info('"%s" "%s" "%s" "%s" "%s" %s' % (obj["Key"], latestVersion, restoreVersion, obj["LastModified"], obj["restoreType"], optional_message))
+        logging.info('"%s" "%s" "%s" "%s" "%s" %s' % (obj["Key"], latestVersion, restoreVersion, obj["LastModified"], obj["changeType"], optional_message))
     else:
         print(obj["Key"])
 
@@ -262,7 +262,7 @@ def handled_by_standard(obj):
     return True
 
 def handled_by_copy(obj):
-    obj["restoreType"] = "copy_object"
+    obj["changeType"] = "modified"
     if args.avoid_duplicates and not needs_copy(obj):
         return True
     if args.dry_run:
@@ -314,13 +314,13 @@ def s3_copy_object(obj):
     client.copy(Bucket=args.dest_bucket, CopySource=copy_source, Key=get_key(obj), ExtraArgs=extra_args)
 
 def handled_by_delete(obj):
-    obj["restoreType"] = "delete_object"
+    obj["changeType"] = "created"
     if args.dry_run:
         print_obj(obj)
         return True
-    # future = executor.submit(s3_delete_object, obj)
-    # global futures
-    # futures[future] = obj
+    future = executor.submit(s3_delete_object, obj)
+    global futures
+    futures[future] = obj
     return True
 
 def s3_delete_object(obj):
