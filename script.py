@@ -23,16 +23,18 @@ data = json.load(file)
 dryRun = data["dryRun"]
 bucket = data["bucket"]
 timestamp = data["timestamp"]
+skipDeletion = data["skipDeletion"]
 items = data["items"]
 
 # Display the config parameters
 outputStr = '''
         Input Parameters
         ------------------------------
-        Dry Run:     {dryRun}
-        Bucket:      {bucket}
-        Timestamp:   {timestamp}
-        Items:       {items}
+        Dry Run:       {dryRun}
+        Skip Deletion: {skipDeletion}
+        Bucket:        {bucket}
+        Timestamp:     {timestamp}
+        Items:         {items}
     '''
 print(outputStr.format(**locals()))
 
@@ -46,13 +48,14 @@ if input is True:
     #Process the records
     for index, item in enumerate(items, start=1):
         itemcmd = f'{scriptcmd} -p {item}'
-        optioncmd = ''
+        optioncmd = itemcmd
         print("------------------------------------------------")
         print(f"Processing {index} of {len(items)} , path = {item}")
+        if skipDeletion:
+            optioncmd = f'{optioncmd} --skip-deletion'
         if dryRun:
-            optioncmd = f'{itemcmd} -v --dry-run'
-        else:
-            optioncmd = itemcmd
+            optioncmd = f'{optioncmd} -v --dry-run'
+            
         subprocess.call(optioncmd, shell=True)
 else:
     print("user denied, Exiting")
