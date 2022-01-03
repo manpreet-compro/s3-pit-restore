@@ -214,7 +214,7 @@ def print_obj(obj, optional_message=""):
     if args.verbose:
         logging.info('"%s" "%s" "%s" "%s" "%s" %s' % (obj["Key"], latestVersion, restoreVersion, obj["LastModified"], obj["changeType"], optional_message))
     else:
-        print(obj["Key"])
+        logging.info(obj["Key"])
 
 def handled_by_glacier(obj):
     if (obj["StorageClass"] == "DEEP_ARCHIVE" or obj["StorageClass"] == "GLACIER") and not args.enable_glacier:
