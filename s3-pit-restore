@@ -35,6 +35,7 @@ from datetime import datetime, timezone
 from dateutil.parser import parse
 from s3transfer.manager import TransferConfig
 from botocore.exceptions import ClientError
+from collections import defaultdict
 
 args = None
 executor = None
@@ -131,15 +132,23 @@ class TestS3PitRestore(unittest.TestCase):
 
         client = boto3.client('s3', endpoint_url=args.endpoint_url)
         resp = client.list_object_versions(Bucket=dest, Prefix=base_path)
-        fileList = []
+
+        fileList = defaultdict(list)
+
         for obj in [*resp['Versions']]:
             if obj['Key'][-1] != '/':
-                items = {
-                    "Key" : obj['Key'],
-                    "VersionId" : obj['VersionId']
-                }
-            fileList.append(items)
+                fileList[obj['Key']].append(obj['VersionId'])
         return fileList
+
+    def check_Version(self, version_before, version_after):
+        for key in version_before.keys():
+            if key in version_after.keys():
+                if len(version_after[key]) == 1:
+                    if version_after[key] != version_before[key]:
+                        return False
+                elif len(version_after[key]) != 3:
+                    return False
+        return True
 
     def test_restore(self):
         contents_before = [ str(uuid.uuid4()) for n in range(2048) ]
@@ -236,8 +245,8 @@ class TestS3PitRestore(unittest.TestCase):
         print("Getting VersionId second time")
         version_after = self.get_versions(path, args.bucket)
         print(version_after);
-        self.assertTrue(True, True)
-        # self.assertTrue(self.check_Version(version_before, version_after), True)
+        # self.assertTrue(True, True)
+        self.assertTrue(self.check_Version(version_before, version_after), True)
 
 
 def signal_handler(signal, frame):
@@ -508,12 +517,12 @@ if __name__=='__main__':
         # Restore back dest_bucket state
         args.dest_bucket = dest_bucket
         if args.dest_bucket is not None:
-            itersuite = unittest.TestLoader().loadTestsFromTestCase(TestS3PitRestore)
-            runner.run(itersuite)
+            # itersuite = unittest.TestLoader().loadTestsFromTestCase(TestS3PitRestore)
+            # runner.run(itersuite)
 
             # Restore back dest_prefix state
             if dest_prefix:
                 args.dest_prefix = dest_prefix
-                itersuite = unittest.TestLoader().loadTestsFromTestCase(TestS3PitRestore)
-                runner.run(itersuite)
+            itersuite = unittest.TestLoader().loadTestsFromTestCase(TestS3PitRestore)
+            runner.run(itersuite)
     sys.exit(0)
