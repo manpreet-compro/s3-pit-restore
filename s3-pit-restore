@@ -138,10 +138,10 @@ class TestS3PitRestore(unittest.TestCase):
         self.assertNotEqual(bucket_versioning.status, None)
         print("enabled!")
 
-    def get_versions(self, path, dest):
+    def get_versions(self, s3, path, dest):
+        bucket = s3.Bucket(dest)
         base_path = os.path.basename(os.path.normpath(path))
-        client = boto3.client('s3', endpoint_url=args.endpoint_url)
-        resp = client.list_object_versions(Bucket=dest, Prefix=base_path)
+        resp = bucket.meta.client.list_object_versions(Bucket=dest, Prefix=base_path)
 
         fileList = defaultdict(list)
         for obj in [*resp['Versions']]:
@@ -151,20 +151,14 @@ class TestS3PitRestore(unittest.TestCase):
 
     def compare_versions(self, version_before, version_after):
         for key in version_before.keys():
-            if key in version_after.keys():
-                version_before_arr =version_before[key]
-                version_after_arr = version_after[key]
-                if len(version_after_arr) == 1:
-                    # New version should not be created as it is the latest one.
-                    if version_after_arr == version_before_arr:
-                        continue
-                    else:
-                        return False
-                elif len(version_after_arr) == 3:
-                    continue
-                else: return False
+            version_before_arr = version_before[key]
+            version_after_arr = version_after[key]
+            if (len(version_after_arr) == 1) and (version_after_arr[0] == version_before_arr[0]):
+                continue
+            elif len(version_after_arr) == 3:
+                continue
             else:
-                False
+                return False
         return True
 
     def s3_clean_test_files(self, s3, path):
@@ -247,7 +241,7 @@ class TestS3PitRestore(unittest.TestCase):
         self.remove_tree(path)
 
         print("Getting file versions for first upload.")
-        version_before = self.get_versions(path, args.bucket)
+        version_before = self.get_versions(s3, path, args.bucket)
 
         print("Upload and overwriting...")
         time.sleep(1)
@@ -266,11 +260,11 @@ class TestS3PitRestore(unittest.TestCase):
         args.avoid_duplicates = False
 
         print("Getting file versions for second upload.")
-        version_after = self.get_versions(path, args.bucket)
+        version_after = self.get_versions(s3, path, args.bucket)
         print('Deleting test files uploaded to s3')
         self.s3_clean_test_files(s3, path)
         print('Comparing versions...')
-        self.assertTrue(self.compare_versions(version_before, version_after), True)
+        self.assertTrue(self.compare_versions(version_before, version_after))
 
 
 def signal_handler(signal, frame):
