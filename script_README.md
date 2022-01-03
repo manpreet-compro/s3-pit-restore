@@ -130,7 +130,8 @@ optional arguments:
   --test                s3 pit restore testing
   --max-workers MAX_WORKERS
                         max number of concurrent download requests
-  --avoid-duplicates    tries to avoid copying files that are already at the latest version
+  --avoid-duplicates    Avoid copying files that are already at the latest version
+  --skip-deletion       Skips deletion of files which are created after the timestamp
   --sse ALGORITHM
                         specify what SSE algorithm you would like to use for the copy
 ```
