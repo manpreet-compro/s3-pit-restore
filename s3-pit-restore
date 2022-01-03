@@ -147,21 +147,35 @@ class TestS3PitRestore(unittest.TestCase):
         resp = client.list_object_versions(Bucket=dest, Prefix=base_path)
 
         fileList = defaultdict(list)
-
         for obj in [*resp['Versions']]:
             if obj['Key'][-1] != '/':
                 fileList[obj['Key']].append(obj['VersionId'])
         return fileList
 
-    def check_Version(self, version_before, version_after):
+    def compare_versions(self, version_before, version_after):
         for key in version_before.keys():
             if key in version_after.keys():
-                if len(version_after[key]) == 1:
-                    if version_after[key] != version_before[key]:
+                version_before_arr =version_before[key]
+                version_after_arr = version_after[key]
+                if len(version_after_arr) == 1:
+                    # New version should not be created as it is the latest one.
+                    if version_after_arr == version_before_arr:
+                        continue
+                    else:
                         return False
-                elif len(version_after[key]) != 3:
-                    return False
+                elif len(version_after_arr) == 3:
+                    continue
+                else: return False
+            else:
+                False
         return True
+
+    def s3_clean_test_files(self, s3, path):
+        base_path = os.path.basename(os.path.normpath(path))
+        if args.dest_prefix:
+            base_path = os.path.join(args.dest_prefix, base_path)
+        bucket = s3.Bucket(args.bucket)
+        bucket.object_versions.filter(Prefix=base_path).delete()
 
     def test_restore(self):
         contents_before = [ str(uuid.uuid4()) for n in range(2048) ]
@@ -225,26 +239,25 @@ class TestS3PitRestore(unittest.TestCase):
         s3 = boto3.resource('s3', endpoint_url=args.endpoint_url)
         self.check_versioning(s3)
 
-        print("Before starting avoid_duplicates test...")
+        print("Before starting the avoid_duplicates test...")
         self.remove_tree(path)
 
         time.sleep(1)
-        time_before = datetime.now(timezone.utc) # t1
+        time_before = datetime.now(timezone.utc)
         time.sleep(1)
         self.generate_tree(path, contents_before)
-        self.upload_directory(s3, path, args.bucket) # t2
+        self.upload_directory(s3, path, args.bucket)
         self.remove_tree(path)
 
-        print("Getting VersionId first time")
+        print("Getting file versions for first upload.")
         version_before = self.get_versions(path, args.bucket)
-        print(version_before)
 
-        print("Upload and overwriting ...")
+        print("Upload and overwriting...")
         time.sleep(1)
-        time_after = datetime.now(timezone.utc) #t3
+        time_after = datetime.now(timezone.utc)
         time.sleep(1)
         self.generate_tree(path, contents_after)
-        self.upload_directory(s3, path, args.bucket) #t4
+        self.upload_directory(s3, path, args.bucket)
         self.remove_tree(path)
 
         args.from_timestamp = str(time_before)
@@ -255,11 +268,12 @@ class TestS3PitRestore(unittest.TestCase):
         print("Restoring objects")
         args.avoid_duplicates = False
 
-        print("Getting VersionId second time")
+        print("Getting file versions for second upload.")
         version_after = self.get_versions(path, args.bucket)
-        print(version_after);
-        # self.assertTrue(True, True)
-        self.assertTrue(self.check_Version(version_before, version_after), True)
+        print('Deleting test files uploaded to s3')
+        self.s3_clean_test_files(s3, path)
+        print('Comparing versions...')
+        self.assertTrue(self.compare_versions(version_before, version_after), True)
 
 
 def signal_handler(signal, frame):
@@ -548,12 +562,12 @@ if __name__=='__main__':
         # Restore back dest_bucket state
         args.dest_bucket = dest_bucket
         if args.dest_bucket is not None:
-            # itersuite = unittest.TestLoader().loadTestsFromTestCase(TestS3PitRestore)
-            # runner.run(itersuite)
+            itersuite = unittest.TestLoader().loadTestsFromTestCase(TestS3PitRestore)
+            runner.run(itersuite)
 
             # Restore back dest_prefix state
             if dest_prefix:
                 args.dest_prefix = dest_prefix
-            itersuite = unittest.TestLoader().loadTestsFromTestCase(TestS3PitRestore)
-            runner.run(itersuite)
+                itersuite = unittest.TestLoader().loadTestsFromTestCase(TestS3PitRestore)
+                runner.run(itersuite)
     sys.exit(0)
