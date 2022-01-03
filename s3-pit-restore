@@ -140,9 +140,6 @@ class TestS3PitRestore(unittest.TestCase):
 
     def get_versions(self, path, dest):
         base_path = os.path.basename(os.path.normpath(path))
-        if args.dest_prefix:
-            base_path = os.path.join(args.dest_prefix, base_path)
-
         client = boto3.client('s3', endpoint_url=args.endpoint_url)
         resp = client.list_object_versions(Bucket=dest, Prefix=base_path)
 
