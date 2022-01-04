@@ -224,6 +224,9 @@ class TestS3PitRestore(unittest.TestCase):
         self.assertTrue(self.check_tree(path, content))
 
     def test_avoid_duplicates(self):
+        if (args.bucket != args.dest_bucket):
+            print('test_avoid_duplicates is applicable when performing an inplace restore.')
+            return self.assertTrue(False)
         contents_before = [ str(uuid.uuid4()) for n in range(2) ]
         contents_after =  [ str(uuid.uuid4()) for n in range(1) ]
         path = os.path.join(os.path.abspath(args.dest), "test-s3-pit-avoid-duplicates")
