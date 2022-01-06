@@ -263,7 +263,7 @@ def handled_by_standard(obj):
 
 def handled_by_copy(obj):
     obj["changeType"] = "modified"
-    if args.avoid_duplicates and obj["IsLatest"]:
+    if args.avoid_duplicates and not needs_copy(obj):
         return True
     if args.dry_run:
         print_obj(obj)
@@ -274,7 +274,9 @@ def handled_by_copy(obj):
     return True
 
 def needs_copy(obj):
-    obj["latestVersion"] = ""
+    if args.bucket == args.dest_bucket:
+        return not obj["IsLatest"]
+    
     try:
         destination_object_data = client.head_object(Bucket=args.dest_bucket, Key=obj["Key"])
     except ClientError as error:
@@ -283,11 +285,7 @@ def needs_copy(obj):
         else:
             raise error
     # Won't work for files uploaded with different multipart chunk sizes
-    if args.bucket != args.dest_bucket:
-        return obj["ETag"] != destination_object_data["ETag"]
-    else:
-        obj["latestVersion"] = destination_object_data["VersionId"]
-        return obj["VersionId"] != destination_object_data["VersionId"]
+    return obj["ETag"] != destination_object_data["ETag"]
 
 def download_file(obj):
     transfer.download_file(args.bucket, obj["Key"], obj["Key"], extra_args={"VersionId": obj["VersionId"]})
