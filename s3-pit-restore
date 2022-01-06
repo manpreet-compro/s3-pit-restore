@@ -201,18 +201,18 @@ def signal_handler(signal, frame):
     print("Gracefully exiting ...")
 
 def print_obj(obj, optional_message=""):
-    latestVersion = ""
-    restoreVersion = ""
+    # latestVersion = ""
+    # restoreVersion = ""
 
-    if "changeType" in obj:
-        if obj["changeType"] == "modified": 
-            latestVersion = obj["latestVersion"]
-            restoreVersion = obj["VersionId"]
-        elif obj["changeType"] == "created": 
-            latestVersion = obj["VersionId"]
+    # if "changeType" in obj:
+    #     if obj["changeType"] == "modified": 
+    #         latestVersion = obj["latestVersion"]
+    #         restoreVersion = obj["VersionId"]
+    #     elif obj["changeType"] == "created": 
+    #         latestVersion = obj["VersionId"]
 
     if args.verbose:
-        logging.info('"%s" "%s" "%s" "%s" "%s" %s' % (obj["Key"], latestVersion, restoreVersion, obj["LastModified"], obj["changeType"], optional_message))
+        logging.info('"%s" "%s" "%s" "%s" %s' % (obj["Key"], obj["VersionId"], obj["LastModified"], obj["changeType"], optional_message))
     else:
         logging.info(obj["Key"])
 
@@ -263,7 +263,7 @@ def handled_by_standard(obj):
 
 def handled_by_copy(obj):
     obj["changeType"] = "modified"
-    if args.avoid_duplicates and not needs_copy(obj):
+    if args.avoid_duplicates and obj["IsLatest"]:
         return True
     if args.dry_run:
         print_obj(obj)
