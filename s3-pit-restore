@@ -201,16 +201,6 @@ def signal_handler(signal, frame):
     print("Gracefully exiting ...")
 
 def print_obj(obj, optional_message=""):
-    # latestVersion = ""
-    # restoreVersion = ""
-
-    # if "changeType" in obj:
-    #     if obj["changeType"] == "modified": 
-    #         latestVersion = obj["latestVersion"]
-    #         restoreVersion = obj["VersionId"]
-    #     elif obj["changeType"] == "created": 
-    #         latestVersion = obj["VersionId"]
-
     if args.verbose:
         logging.info('"%s" "%s" "%s" "%s" %s' % (obj["Key"], obj["VersionId"], obj["LastModified"], obj["changeType"], optional_message))
     else:
