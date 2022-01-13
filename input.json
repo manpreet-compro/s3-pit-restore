@@ -2,8 +2,9 @@
 	"dryRun": true,
 	"skipDeletion": true,
 	"bucket": "ms-versioning-bucket",
-	"timestamp": "12-29-2021 15:30:00 +5:30",
+	"delimiter": "/classroom",
+	"timestamp": "01-13-2022 15:50:00 +5:30",
 	"items": [
-		 "manpreet/"
+		 "susanto/"
 	]
 }
