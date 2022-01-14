@@ -2,11 +2,12 @@
 	"dryRun": true,
 	"skipDeletion": true,
 	"bucket": "ms-versioning-bucket",
-	"delimiter": "",
+	"delimiter": "/class",
 	"timestamp": "01-13-2022 14:45:30 +5:30",
 	"items": [
 		 "susanto/orgs"
 	],
 	"ignoreList": [
+		"/playground"
 	]
 }

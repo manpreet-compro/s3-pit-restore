@@ -39,6 +39,8 @@ outputStr = '''
         Bucket:        {bucket}
         Timestamp:     {timestamp}
         Items:         {items}
+        Delimiter:     {delimiter}
+        Ignore List:   {ignoreList}
     '''
 print(outputStr.format(**locals()))
 

@@ -436,7 +436,7 @@ if __name__=='__main__':
     parser.add_argument('--sse', choices=['AES256', 'aws:kms'], help='Specify server-side encryption')
     parser.add_argument('--logFileName',help='name of log file')
     parser.add_argument('--delimiter',help='delimiter',  default="")
-    parser.add_argument('--ignore-list', help="ignore list", default=[])
+    parser.add_argument('--ignore-list', help="ignore list", default="[]")
     args = parser.parse_args()
 
     args.ignore_list = ast.literal_eval(args.ignore_list)
