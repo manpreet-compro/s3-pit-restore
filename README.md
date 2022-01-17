@@ -54,7 +54,7 @@ We need to provide values in `input.json`.
 	"delimiter": "/class"
 	"timestamp": "12-23-2021 15:25:00 +5:30",
 	"items": [
-		 "level1/level2-1/"
+		 "level1/level2-1"
 	],
 	"ignoreList": [
 			"/group"
@@ -77,7 +77,7 @@ We need to provide values in `input.json`.
 - items - list the folders which will be restored. Multiple folders/files can be passed
 
 - delimiter
-	- The list-object-versions method would not return any files that had a delimiter string in it.
+	- Files would not be fetched from s3 if the file path had a delimiter string in it.
 	- If empty string is passed, list-object-versions method works normally.
 
 - ignoreList
