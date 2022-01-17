@@ -1,4 +1,4 @@
-import subprocess, json
+import subprocess, json, sys, psutil, os
 from datetime import datetime
 
 # Function to ask user confirmation
@@ -17,51 +17,58 @@ def ask_yesno(question):
         else:
             print("Please respond by yes or no.") 
 
-# Read input file and parameters
-file = open('input.json')
-data = json.load(file)
-
-dryRun = data["dryRun"]
-bucket = data["bucket"]
-timestamp = data["timestamp"]
-skipDeletion = data["skipDeletion"]
-items = data["items"]
-logFileName = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
-delimiter = data["delimiter"]
-ignoreList = data["ignoreList"]
-
-# Display the config parameters
-outputStr = '''
-        Input Parameters
-        ------------------------------
-        Dry Run:       {dryRun}
-        Skip Deletion: {skipDeletion}
-        Bucket:        {bucket}
-        Timestamp:     {timestamp}
-        Items:         {items}
-        Delimiter:     {delimiter}
-        Ignore List:   {ignoreList}
-    '''
-print(outputStr.format(**locals()))
-
-
-input = ask_yesno("Continue ? (y/n)")
-
-if input is True: 
-    print("user consent. Starting")
-    scriptcmd = f'python s3-pit-restore -b {bucket} -B {bucket} -t "{timestamp}" --avoid-duplicates --logFileName "{logFileName}" --delimiter "{delimiter}" --ignore-list "{ignoreList}"'
-    
-    #Process the records
-    for index, item in enumerate(items, start=1):
-        itemcmd = f'{scriptcmd} -p {item}'
-        optioncmd = itemcmd
-        print("------------------------------------------------")
-        print(f"Processing {index} of {len(items)} , path = {item}")
-        if skipDeletion:
-            optioncmd = f'{optioncmd} --skip-deletion'
-        if dryRun:
-            optioncmd = f'{optioncmd} -v --dry-run'
-            
-        subprocess.call(optioncmd, shell=True)
+# Check python version 
+if sys.version_info[0] < 3:
+    print('Script is supported only for python 3 version')
+    sys.exit()
 else:
-    print("user denied, Exiting")
+    # Read input file and parameters
+    file = open('input.json')
+    data = json.load(file)
+
+    dryRun = data["dryRun"]
+    bucket = data["bucket"]
+    timestamp = data["timestamp"]
+    skipDeletion = data["skipDeletion"]
+    items = data["items"]
+    logFileName = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+    delimiter = data["delimiter"]
+    ignoreList = data["ignoreList"]
+    python = os.path.basename(psutil.Process().exe()).split('.')[0]
+    print(psutil.Process().cmdline())
+
+    # Display the config parameters
+    outputStr = '''
+            Input Parameters
+            ------------------------------
+            Dry Run:       {dryRun}
+            Skip Deletion: {skipDeletion}
+            Bucket:        {bucket}
+            Timestamp:     {timestamp}
+            Items:         {items}
+            Delimiter:     {delimiter}
+            Ignore List:   {ignoreList}
+        '''
+    print(outputStr.format(**locals()))
+
+
+    input = ask_yesno("Continue ? (y/n)")
+
+    if input is True: 
+        print("user consent. Starting")
+        scriptcmd = f'{python} s3-pit-restore -b {bucket} -B {bucket} -t "{timestamp}" --avoid-duplicates --logFileName "{logFileName}" --delimiter "{delimiter}" --ignore-list "{ignoreList}"'
+        
+        #Process the records
+        for index, item in enumerate(items, start=1):
+            itemcmd = f'{scriptcmd} -p {item}'
+            optioncmd = itemcmd
+            print("------------------------------------------------")
+            print(f"Processing {index} of {len(items)} , path = {item}")
+            if skipDeletion:
+                optioncmd = f'{optioncmd} --skip-deletion'
+            if dryRun:
+                optioncmd = f'{optioncmd} -v --dry-run'
+                
+            subprocess.call(optioncmd, shell=True)
+    else:
+        print("user denied, Exiting")
