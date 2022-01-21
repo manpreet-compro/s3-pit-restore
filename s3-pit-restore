@@ -335,6 +335,7 @@ def do_restore():
     # To avoid this, we will push from page to page the desynchronized markers until they fall on the
     # page they should (the one with the versioning markers for the same set of files)
     previous_deletemarkers = []
+    previous_latest = {}
     for page in page_iterator:
         if not "Versions" in page:
             print("No versions matching criteria, exiting ...", file=sys.stderr)
@@ -353,6 +354,8 @@ def do_restore():
             if last_obj["Key"] == obj["Key"]:
                 # We've had a newer version or a delete of this key
                 continue
+            else:
+                previous_latest[obj['Key']] = obj
 
             version_date = obj["LastModified"]
 
@@ -370,10 +373,12 @@ def do_restore():
             if dmarker["Key"] == obj["Key"] and dmarker["LastModified"] > obj["LastModified"] and dmarker["LastModified"] <= pit_end_date:
                 # The most recent operation on this key was a delete
                 last_obj = dmarker
+                previous_latest.pop(last_obj['Key'], None)
                 continue
 
             # This version needs to be restored..
             last_obj = obj
+            previous_latest.pop(last_obj['Key'], None)
 
             if handled_by_glacier(obj):
                 continue
@@ -402,6 +407,12 @@ def do_restore():
                 del(futures[future])
     # delete objects which came in existence after pit_end_date only if the destination bucket is same as source bucket and restoring to same object key
     if args.dest_bucket == args.bucket and not args.dest_prefix:
+        
+        if args.old_restore:
+            for key in previous_latest:
+                obj_needs_be_deleted.pop(key, None)
+                handled_by_copy(previous_latest[key])
+
         for key in obj_needs_be_deleted:
             handled_by_delete(obj_needs_be_deleted[key])
         for future in concurrent.futures.as_completed(futures):
@@ -437,6 +448,7 @@ if __name__=='__main__':
     parser.add_argument('--logFileName',help='name of log file')
     parser.add_argument('--delimiter',help='delimiter',  default="")
     parser.add_argument('--ignore-list', help="ignore list", default="[]")
+    parser.add_argument('--old-restore', help="ignore list", action='store_true')
     args = parser.parse_args()
 
     args.ignore_list = ast.literal_eval(args.ignore_list)
