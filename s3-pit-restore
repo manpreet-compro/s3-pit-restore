@@ -354,8 +354,8 @@ def do_restore():
             if last_obj["Key"] == obj["Key"]:
                 # We've had a newer version or a delete of this key
                 continue
-            else:
-                previous_latest[obj['Key']] = obj
+            
+            previous_latest[obj['Key']] = obj
 
             version_date = obj["LastModified"]
 
@@ -448,7 +448,7 @@ if __name__=='__main__':
     parser.add_argument('--logFileName',help='name of log file')
     parser.add_argument('--delimiter',help='delimiter',  default="")
     parser.add_argument('--ignore-list', help="ignore list", default="[]")
-    parser.add_argument('--old-restore', help="ignore list", action='store_true')
+    parser.add_argument('--old-restore', help="restore at oldest version when no version found", action='store_true')
     args = parser.parse_args()
 
     args.ignore_list = ast.literal_eval(args.ignore_list)

@@ -35,6 +35,7 @@ items = data["items"]
 logFileName = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
 delimiter = data["delimiter"]
 ignoreList = data["ignoreList"]
+oldRestore = data["oldRestore"]
 
 # Display the config parameters
 outputStr = '''
@@ -42,6 +43,7 @@ outputStr = '''
         ------------------------------
         Dry Run:       {dryRun}
         Skip Deletion: {skipDeletion}
+        Old Restore:   {oldRestore}
         Bucket:        {bucket}
         Timestamp:     {timestamp}
         Items:         {items}
@@ -68,6 +70,8 @@ if input is True:
             optioncmd = f'{optioncmd} --skip-deletion'
         if dryRun:
             optioncmd = f'{optioncmd} -v --dry-run'
+        if oldRestore:
+            optioncmd = f'{optioncmd} --old-restore'
             
         subprocess.call(optioncmd, shell=True)
 else:
