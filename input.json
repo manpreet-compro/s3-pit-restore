@@ -1,6 +1,6 @@
 {
 	"dryRun": true,
-	"deletionMode": "default",
+	"deletionMode": "original",
 	"bucket": "ms-versioning-bucket",
 	"delimiter": "",
 	"timestamp": "02-23-2022 10:49:48 +5:30",

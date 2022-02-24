@@ -239,10 +239,7 @@ def handled_by_standard(obj):
     return True
 
 def handled_by_copy(obj):
-    if "changeType" in obj:
-        obj["changeType"] = "created -> modified"
-    else:
-        obj["changeType"] = "modified"
+    obj["changeType"] = "modified"
     if args.avoid_duplicates and not needs_copy(obj):
         return True
     if args.dry_run:
@@ -294,15 +291,10 @@ def s3_copy_object(obj):
 def handled_by_delete(obj):
     obj["changeType"] = "created"
     if args.dry_run:
-        if args.deletion_mode == 'original':
-            handled_by_copy(obj)
-            return True
-        if args.deletion_mode == 'skip':
-            obj["changeType"] = "skipped"
         print_obj(obj)
         return True
 
-    if args.deletion_mode == 'default':
+    if args.deletion_mode == 'delete':
         future = executor.submit(s3_delete_object, obj)
         global futures
         futures[future] = obj
@@ -311,7 +303,6 @@ def handled_by_delete(obj):
         handled_by_copy(obj)
         return True
     else:
-        obj["changeType"] = "skipped"
         return True
 
 

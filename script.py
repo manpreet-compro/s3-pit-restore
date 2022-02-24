@@ -36,6 +36,10 @@ logFileName = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
 delimiter = data["delimiter"]
 ignoreList = data["ignoreList"]
 
+if ((deletionMode != 'skip') and (deletionMode != 'delete') and (deletionMode != 'original')):
+    print('Deletion Mode value is not correct. Please check again.')
+    sys.exit()
+
 # Display the config parameters
 outputStr = '''
         Input Parameters
