@@ -239,7 +239,8 @@ def handled_by_standard(obj):
     return True
 
 def handled_by_copy(obj):
-    obj["changeType"] = "modified"
+    if "changedtype" not in obj:
+        obj["changeType"] = "modified"
     if args.avoid_duplicates and not needs_copy(obj):
         return True
     if args.dry_run:

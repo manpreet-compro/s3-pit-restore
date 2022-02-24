@@ -1,9 +1,9 @@
 {
 	"dryRun": true,
-	"deletionMode": "original",
+	"deletionMode": "skip",
 	"bucket": "ms-versioning-bucket",
 	"delimiter": "",
-	"timestamp": "02-23-2022 10:49:48 +5:30",
+	"timestamp": "01-29-2022 17:18:39 +5:30",
 	"items": [
 		 "susanto/folder1"
 	],
