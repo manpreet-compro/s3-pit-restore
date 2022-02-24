@@ -29,19 +29,25 @@ data = json.load(file)
 
 dryRun = data["dryRun"]
 bucket = data["bucket"]
+deletionMode = data["deletionMode"]
 timestamp = data["timestamp"]
-skipDeletion = data["skipDeletion"]
 items = data["items"]
 logFileName = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
 delimiter = data["delimiter"]
 ignoreList = data["ignoreList"]
+
+validValues = ['skip', 'delete', 'original']
+
+if deletionMode not in validValues:
+    print('Deletion Mode value is not correct. Please check again.')
+    sys.exit()
 
 # Display the config parameters
 outputStr = '''
         Input Parameters
         ------------------------------
         Dry Run:       {dryRun}
-        Skip Deletion: {skipDeletion}
+        Deletion Mode: {deletionMode}
         Bucket:        {bucket}
         Timestamp:     {timestamp}
         Items:         {items}
@@ -56,7 +62,7 @@ input = ask_yesno("Continue ? (y/n)")
 if input is True: 
     print("user consent. Starting")
     pycmd = Path(sys.executable).stem
-    scriptcmd = f'{pycmd} s3-pit-restore -b {bucket} -B {bucket} -t "{timestamp}" --avoid-duplicates --logFileName "{logFileName}" --delimiter "{delimiter}" --ignore-list "{ignoreList}"'
+    scriptcmd = f'{pycmd} s3-pit-restore -b {bucket} -B {bucket} -t "{timestamp}" --avoid-duplicates --logFileName "{logFileName}" --delimiter "{delimiter}" --ignore-list "{ignoreList}" --deletion-mode "{deletionMode}"'
     
     #Process the records
     for index, item in enumerate(items, start=1):
@@ -64,8 +70,6 @@ if input is True:
         optioncmd = itemcmd
         print("------------------------------------------------")
         print(f"Processing {index} of {len(items)} , path = {item}")
-        if skipDeletion:
-            optioncmd = f'{optioncmd} --skip-deletion'
         if dryRun:
             optioncmd = f'{optioncmd} -v --dry-run'
             

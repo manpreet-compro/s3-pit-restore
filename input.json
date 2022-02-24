@@ -1,13 +1,12 @@
 {
 	"dryRun": true,
-	"skipDeletion": true,
+	"deletionMode": "skip",
 	"bucket": "ms-versioning-bucket",
-	"delimiter": "/class",
-	"timestamp": "01-13-2022 14:45:30 +5:30",
+	"delimiter": "",
+	"timestamp": "01-29-2022 17:18:39 +5:30",
 	"items": [
-		 "susanto/orgs"
+		 "susanto/folder1"
 	],
 	"ignoreList": [
-		"/playground"
 	]
 }

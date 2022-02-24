@@ -239,7 +239,8 @@ def handled_by_standard(obj):
     return True
 
 def handled_by_copy(obj):
-    obj["changeType"] = "modified"
+    if "changedtype" not in obj:
+        obj["changeType"] = "modified"
     if args.avoid_duplicates and not needs_copy(obj):
         return True
     if args.dry_run:
@@ -294,13 +295,17 @@ def handled_by_delete(obj):
         print_obj(obj)
         return True
 
-    if args.skip_deletion:
-        return True
-    else:
+    if args.deletion_mode == 'delete':
         future = executor.submit(s3_delete_object, obj)
         global futures
         futures[future] = obj
         return True
+    elif args.deletion_mode == 'original':
+        handled_by_copy(obj)
+        return True
+    else:
+        return True
+
 
 def s3_delete_object(obj):
     client.delete_object(Bucket=args.dest_bucket, Key=obj["Key"])
@@ -432,7 +437,7 @@ if __name__=='__main__':
     parser.add_argument('--test', help='s3 pit restore testing', action='store_true')
     parser.add_argument('--max-workers', help='max number of concurrent download requests', default=10, type=int)
     parser.add_argument('--avoid-duplicates', help='avoids copying files if the latest version is the version that matches timestamp requested', action='store_true')
-    parser.add_argument('--skip-deletion', help='skip deletion of files created after the timestamp', action='store_true')
+    parser.add_argument('--deletion-mode', help='skip deletion of files created after the timestamp', default="skip")
     parser.add_argument('--sse', choices=['AES256', 'aws:kms'], help='Specify server-side encryption')
     parser.add_argument('--logFileName',help='name of log file')
     parser.add_argument('--delimiter',help='delimiter',  default="")
